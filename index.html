@@ -144,13 +144,13 @@ function preview($inputs) {
 		from: param.border_width/1 + 2,
 		to: param.border_width,
 		begin: 'mousedown',
-		'xlink:href': '#' + rectId
+		'href': '#' + rectId
 	}) + svg.animate({
 		attributeName: 'stroke-width',
 		from: param.border_width,
 		to: param.border_width/1 + 2,
 		begin: 'mouseup',
-		'xlink:href': '#' + rectId
+		'href': '#' + rectId
 	});
 	
 	let gradients = '';
@@ -160,13 +160,13 @@ function preview($inputs) {
 			from: param.background_hover_color,
 			to: param.background_hover_color,
 			begin: 'mouseover',
-			'xlink:href': '#' + rectId
+			'href': '#' + rectId
 		}) + svg.animate({
 			attributeName: 'fill',
 			from: param.background_color,
 			to: param.background_color,
 			begin: 'mouseout',
-			'xlink:href': '#' + rectId
+			'href': '#' + rectId
 		})
 		bgColor = param.background_color;
 	} else {
