@@ -112,6 +112,31 @@ function preview($inputs) {
 		param[id.replace(/-/g, '_')] = val;
 	});
 	
+	let rectWidth = param.button_width/1 - param.button_shadow;
+	let rectHeight = param.button_height/1 - param.button_shadow;
+	let textY = Math.round(rectHeight / 2 + param.font_size / 3);
+	let buttonColor = standardizeColor(param.background_color);
+	let buttonColorRGB = hexToRgb(buttonColor)
+	let darkColor = {
+		r: buttonColorRGB.r * 0.7,
+		g: buttonColorRGB.g * 0.7,
+		b: buttonColorRGB.b * 0.7
+	};
+	darkColor = "rgb(" + darkColor.r + "," + darkColor.g + "," + darkColor.b + ")";
+	
+	let button_shadow = '';
+	if (param.button_shadow > 0) {
+		button_shadow = svg.rect({
+			x: param.button_shadow,
+			y: param.button_shadow,
+			width: rectWidth,
+			height: rectHeight,	
+			rx: param.border_radius,
+			ry: param.border_radius,
+			fill: '#666',
+		});
+	}
+	
 	let rectId = "rect" + Math.round((new Date()) / 1000);
 	
 	let animate = svg.animate({
@@ -128,6 +153,7 @@ function preview($inputs) {
 		'xlink:href': '#' + rectId
 	});
 	
+	let gradients = '';
 	if (param.background_hover_color !== '' && param.background_hover_color !== param.background_color) {
 		animate += svg.animate({
 			attributeName: 'fill',
@@ -142,28 +168,42 @@ function preview($inputs) {
 			begin: 'mouseout',
 			'xlink:href': '#' + rectId
 		})
+		bgColor = param.background_color;
+	} else {
+		gradients = svg.linearGradient({
+			id: 'bgColor',
+			x1: 0,
+			x2: 0,
+			y1: 0,
+			y2: 1,
+			data:
+				svg.stop({offset: '0%', 'stop-color': buttonColor}) +
+				svg.stop({offset: '50%', 'stop-color': buttonColor}) +
+				svg.stop({offset: '100%', 'stop-color': darkColor})
+		});
+		bgColor = 'url(#bgColor)';
 	}
-	
-	var text_y = Math.round(param.button_height / 2 + param.font_size / 3);
 	
 	var svgCode = svg.svg({
 		width: param.button_width,
 		height: param.button_height,
 		data:
+			gradients +
+			button_shadow +
 			svg.rect({
 				id: rectId,
-				width: param.button_width,
-				height: param.button_height,	
+				width: rectWidth,
+				height: rectHeight,	
 				rx: param.border_radius,
 				ry: param.border_radius,
-				fill: param.background_color,
+				fill: bgColor,
 				'stroke-width':param.border_width,
 				'stroke':param.border_color,
 			}) +
 			svg.text({
-				x: '50%',
+				x: rectWidth / 2,
 				style: 'pointer-events:none; user-select:none',
-				y: text_y,
+				y: textY,
 				'text-anchor': 'middle',
 				data: param.text, 
 				'font-family': param.font_family,
@@ -205,9 +245,25 @@ function saveTextAsFile(textToWrite, fileNameToSaveAs) {
 	downloadLink.click();
 }
 
+// Source https://stackoverflow.com/questions/1573053/javascript-function-to-convert-color-names-to-hex-codes/24390910
+function standardizeColor(str) {
+	var ctx = document.createElement('canvas').getContext('2d');
+	ctx.fillStyle = str;
+	return ctx.fillStyle;
+}
+
+// Source https://stackoverflow.com/questions/5623838/rgb-to-hex-and-hex-to-rgb
+function hexToRgb(hex) {
+	var result = /^#([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+	return result ? {
+		r: parseInt(result[1], 16),
+		g: parseInt(result[2], 16),
+		b: parseInt(result[3], 16)
+	} : null;
+}
+
 jQuery(function() {
 	let $inputs = jQuery(".def-box input, .def-box select");
-
 	$inputs.on("change", function() {
 		preview($inputs);
 	});
@@ -251,7 +307,7 @@ jQuery(function() {
 			<label for="font-weight">Font Weight</label>
 			<select id="font-weight" name="font-weight">
 				<option>normal</option>
-				<option>bold</option>
+				<option selected="selected">bold</option>
 				<option>bolder</option>
 			</select>
 		</div>
@@ -267,7 +323,7 @@ jQuery(function() {
 	</div>
 		
 	<div class="def-box">
-		<h2>Button Size</h2>
+		<h2>Sizes</h2>
 		<div class="def-box-row">
 			<label for="button-width">Button Width</label>
 			<input id="button-width" name="button-width" type="number" min="1" step="1" max="400" value="100">
@@ -275,7 +331,12 @@ jQuery(function() {
 		
 		<div class="def-box-row">
 			<label for="button-height">Button Height</label>
-			<input id="button-height" name="button-height" type="number" min="1" step="1" max="400" value="50">
+			<input id="button-height" name="button-height" type="number" min="1" step="1" max="400" value="40">
+		</div>
+		
+		<div class="def-box-row">
+			<label for="button-shadow">Button Shadow</label>
+			<input id="button-shadow" name="button-shadow" type="number" min="0" step="1" max="10" value="2">
 		</div>
 	</div>
 
@@ -296,7 +357,7 @@ jQuery(function() {
 		<h2>Colors</h2>
 		<div class="def-box-row">
 			<label for="background-color">Background</label>
-			<input id="background-color" name="background-color" value="pink" title="enter css color">
+			<input id="background-color" name="background-color" value="#8f8" title="enter css color">
 		</div>
 		
 		<div class="def-box-row">
@@ -315,7 +376,7 @@ jQuery(function() {
 		<h2>Interactivity</h2>	
 		<div class="def-box-row">
 			<label for="background-hover-color">Background Hover Color</label>
-			<input id="background-hover-color" name="background-hover-color" value="yellow">
+			<input id="background-hover-color" name="background-hover-color" value="" title="enter css color or leave blank">
 		</div>
 	</div>
 
